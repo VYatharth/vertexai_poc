@@ -5,6 +5,8 @@ build/
 dist/
 wheels/
 *.egg-info
-
+.adk
 # Virtual environments
 .venv
+asp_demo/my-first-agent/.adk/session.db
+asp_demo/my-first-agent/n/.adk/session.db

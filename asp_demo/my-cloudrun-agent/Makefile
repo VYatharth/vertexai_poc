@@ -23,12 +23,16 @@ playground:
 	@echo "==============================================================================="
 	uv run adk web . --port 8501 --reload_agents
 
+# Command to run the api server without UI
+	uv run adk api_server . --port 8000
+
 # ==============================================================================
 # Local Development Commands
 # ==============================================================================
 
 # Launch local development server with hot-reload
 # Usage: make local-backend [PORT=8000] - Specify PORT for parallel scenario testing
+# Seems similar to playground only
 local-backend:
 	uv run uvicorn app.fast_api_app:app --host localhost --port $(or $(PORT),8000) --reload
 
@@ -56,6 +60,41 @@ deploy:
 
 # Alias for 'make deploy' for backward compatibility
 backend: deploy
+
+# Command for windows
+	# 1. Get the Project ID
+	$PROJECT_ID = gcloud config get-value project
+
+	# 2. Extract version from pyproject.toml using Regex
+	$VERSION = "0.0.0"
+	if (Test-Path "pyproject.toml") {
+		$match = Select-String -Path "pyproject.toml" -Pattern '^version\s*=\s*"(.*)"'
+		if ($match) { $VERSION = $match.Matches.Groups[1].Value }
+	}
+
+	# 3. Build the command arguments array
+	$params = @(
+		"beta", "run", "deploy", "my-cloudrun-agent",
+		"--source", ".",
+		"--memory", "4Gi",
+		"--project", $PROJECT_ID,
+		"--region", "us-central1",
+		"--no-allow-unauthenticated",
+		"--no-cpu-throttling",
+		"--labels", "created-by=adk",
+		"--update-build-env-vars", "AGENT_VERSION=$VERSION",
+		"--update-env-vars", ""
+	)
+
+	# 4. Handle Conditional Flags (Replace $IAP and $PORT with your actual variables)
+	if ($IAP) { $params += "--iap" }
+	if ($PORT) { $params += "--port=$PORT" }
+
+	# 5. Execute
+	gcloud @params
+
+
+
 
 # ==============================================================================
 # Testing & Code Quality

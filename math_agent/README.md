@@ -1,0 +1,2 @@
+- Update project id in app/.env file
+- **uv run adk web . --port 8501 --reload_agent**
